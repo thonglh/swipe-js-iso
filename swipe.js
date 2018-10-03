@@ -63,7 +63,7 @@
       //special case if two slides
       if (browser.transitions && continuous && slides.length < 3) {
         element.appendChild(slides[0].cloneNode(true));
-        element.appendChild(element.children[1].cloneNode(true));
+        element.appendChild(slides[1].cloneNode(true));
         slides = element.children;
       }
 
