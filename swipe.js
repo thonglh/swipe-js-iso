@@ -52,6 +52,18 @@
     var continuous = (options.continuous =
       options.continuous !== undefined ? options.continuous : true);
 
+    function makeFn(self, fn) {
+      var args = [].slice.call(arguments, 2);
+
+      return function() {
+        fn && fn.apply(self, args);
+      };
+    }
+
+    function offloadMove(pos, dist, speed) {
+      offloadFn(makeFn(this, move, pos, dist, speed));
+    }
+
     function setup() {
       // cache slides
       slides = element.children;
@@ -88,16 +100,14 @@
         if (browser.transitions) {
           slide.style.left = pos * -width + 'px';
           // offload move, avoid race-condition in webkit (image rendering vs css transform)
-          offloadFn(function() {
-            move(pos, index > pos ? -width : index < pos ? width : 0, 0);
-          });
+          offloadMove(pos, index > pos ? -width : index < pos ? width : 0, 0);
         }
       }
 
       // reposition elements before and after index
       if (continuous && browser.transitions) {
-        move(circle(index - 1), -width, 0);
-        move(circle(index + 1), width, 0);
+        offloadMove(circle(index - 1), -width, 0);
+        offloadMove(circle(index + 1), width, 0);
       }
 
       if (!browser.transitions) element.style.left = index * -width + 'px';
@@ -161,7 +171,9 @@
       }
 
       index = to;
-      offloadFn(options.callback && options.callback(index, slides[index]));
+      if (options.callback) {
+        offloadFn(makeFn(null, options.callback, index, slides[index]));
+      }
     }
 
     function move(index, dist, speed) {
@@ -244,14 +256,14 @@
             this.move(event);
             break;
           case 'touchend':
-            offloadFn(this.end(event));
+            offloadFn(makeFn(this, this.end, event));
             break;
           case 'webkitTransitionEnd':
           case 'msTransitionEnd':
           case 'oTransitionEnd':
           case 'otransitionend':
           case 'transitionend':
-            offloadFn(this.transitionEnd(event));
+            offloadFn(makeFn(this, this.transitionEnd, event));
             break;
           case 'resize':
             offloadFn(setup);
