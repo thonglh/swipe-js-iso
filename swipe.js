@@ -60,8 +60,8 @@
       };
     }
 
-    function offloadMove(pos, dist, speed) {
-      offloadFn(makeFn(this, move, pos, dist, speed));
+    function offloadMove(pos, dist, speed, is2D) {
+      offloadFn(makeFn(this, move, pos, dist, speed, is2D));
     }
 
     function setup() {
@@ -100,7 +100,14 @@
         if (browser.transitions) {
           slide.style.left = pos * -width + 'px';
           // offload move, avoid race-condition in webkit (image rendering vs css transform)
-          offloadMove(pos, index > pos ? -width : index < pos ? width : 0, 0);
+          // for the start index, we don't use 3D transform, avoid GPU render issue on webkit
+          var is2D = pos === index;
+          offloadMove(
+            pos,
+            index > pos ? -width : index < pos ? width : 0,
+            0,
+            is2D
+          );
         }
       }
 
@@ -176,12 +183,12 @@
       }
     }
 
-    function move(index, dist, speed) {
-      translate(index, dist, speed);
+    function move(index, dist, speed, is2D) {
+      translate(index, dist, speed, is2D);
       slidePos[index] = dist;
     }
 
-    function translate(index, dist, speed) {
+    function translate(index, dist, speed, is2D) {
       var slide = slides[index];
       var style = slide && slide.style;
 
@@ -190,7 +197,9 @@
       style.webkitTransitionDuration = style.MozTransitionDuration = style.msTransitionDuration = style.OTransitionDuration = style.transitionDuration =
         speed + 'ms';
 
-      style.webkitTransform = 'translate(' + dist + 'px,0)' + 'translateZ(0)';
+      style.webkitTransform =
+        'translate(' + dist + 'px,0)' + (is2D ? '' : 'translateZ(0)');
+
       style.msTransform = style.MozTransform = style.OTransform =
         'translateX(' + dist + 'px)';
     }
