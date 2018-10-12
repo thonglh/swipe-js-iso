@@ -47,7 +47,8 @@
     var element = container.children[0];
     var slides, slidePos, width, length;
     options = options || {};
-    var index = parseInt(options.startSlide, 10) || 0;
+    var startSlide = parseInt(options.startSlide, 10) || 0;
+    var index = startSlide;
     var speed = options.speed || 300;
     var continuous = (options.continuous =
       options.continuous !== undefined ? options.continuous : true);
@@ -101,7 +102,7 @@
           slide.style.left = pos * -width + 'px';
           // offload move, avoid race-condition in webkit (image rendering vs css transform)
           // for the start index, we don't use 3D transform, avoid GPU render issue on webkit
-          var is2D = pos === index;
+          var is2D = pos === index && index === startSlide;
           offloadMove(
             pos,
             index > pos ? -width : index < pos ? width : 0,
